@@ -96,6 +96,8 @@ resource "azurerm_subnet" "azure-openai-endpoint-subnet" {
     resource_group_name = azurerm_resource_group.azure-openai-rg.name
     tenant_id = var.tenant_id
     sku_name = "standard"
+    purge_protection_enabled    = true
+    soft_delete_retention_days  = 7
 
     access_policy {
         tenant_id = var.tenant_id
@@ -120,9 +122,23 @@ resource "azurerm_subnet" "azure-openai-endpoint-subnet" {
             "Recover",
             "Rotate",
             "GetRotationPolicy",
-            "SetRotationPolicy"
+            "SetRotationPolicy",
+            "Purge"
         ]
     }
+}
+
+resource "azurerm_key_vault_access_policy" "storage_account_access" {
+  key_vault_id = azurerm_key_vault.azure-openai-keyvault.id
+
+  tenant_id = var.tenant_id
+  object_id = azurerm_storage_account.document-sa.identity.0.principal_id
+
+  key_permissions = [
+    "Get", 
+    "WrapKey", 
+    "UnwrapKey"
+  ]
 }
 
 resource "azurerm_key_vault_key" "azure-openai-sa-key" {
@@ -138,5 +154,16 @@ resource "azurerm_key_vault_key" "azure-openai-sa-key" {
     "unwrapKey",
     "verify",
     "wrapKey",
+  ]
+}
+
+resource "azurerm_storage_account_customer_managed_key" "document-sa-cmk" {
+  storage_account_id = azurerm_storage_account.document-sa.id
+  key_vault_id       = azurerm_key_vault.azure-openai-keyvault.id
+  key_name           = azurerm_key_vault_key.azure-openai-sa-key.name
+  key_version        = azurerm_key_vault_key.azure-openai-sa-key.version
+
+  depends_on = [
+    azurerm_key_vault_access_policy.storage_account_access
   ]
 }
