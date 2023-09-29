@@ -157,17 +157,6 @@ resource "azurerm_key_vault_key" "azure-openai-sa-key" {
   ]
 }
 
-resource "azurerm_storage_account_customer_managed_key" "document-sa-cmk" {
-  storage_account_id = azurerm_storage_account.document-sa.id
-  key_vault_id       = azurerm_key_vault.azure-openai-keyvault.id
-  key_name           = azurerm_key_vault_key.azure-openai-sa-key.name
-  key_version        = azurerm_key_vault_key.azure-openai-sa-key.version
-
-  depends_on = [
-    azurerm_key_vault_access_policy.storage_account_access
-  ]
-}
-
 
 /*
  * Azure Cloud Function
@@ -198,9 +187,18 @@ resource "azurerm_function_app" "create-documents-fa" {
   app_service_plan_id        = azurerm_app_service_plan.plan.id
   storage_account_name       = azurerm_storage_account.create-documents-fa-sa.name
   storage_account_access_key = azurerm_storage_account.create-documents-fa-sa.primary_access_key
+  os_type                    = "linux"
+  version                    = "~4"
 
   identity {
     type = "SystemAssigned"
+  }
+
+  app_settings = {
+    "WEBSITE_RUN_FROM_PACKAGE" = ""
+    "FUNCTIONS_WORKER_RUNTIME" = "node"
+    "WEBSITE_NODE_DEFAULT_VERSION" = "18.12.1", 
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = ""
   }
 }
 

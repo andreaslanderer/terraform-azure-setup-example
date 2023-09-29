@@ -37,3 +37,10 @@ Deploy with Terraform
 ```shell
 terraform apply
 ```
+
+Deploy cloud function
+```
+cd MyFunctionProj
+npm i -g azure-functions-core-tools
+func azure functionapp publish create-documents-fa
+```
