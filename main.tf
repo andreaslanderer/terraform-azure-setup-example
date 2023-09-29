@@ -167,3 +167,48 @@ resource "azurerm_storage_account_customer_managed_key" "document-sa-cmk" {
     azurerm_key_vault_access_policy.storage_account_access
   ]
 }
+
+
+/*
+ * Azure Cloud Function
+ */
+ resource "azurerm_storage_account" "create-documents-fa-sa" {
+  name                     = "createdocumentsfasa"
+  resource_group_name      = azurerm_resource_group.azure-openai-rg.name
+  location                 = azurerm_resource_group.azure-openai-rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_app_service_plan" "plan" {
+  name                = "azure-functions-service-plan"
+  location            = azurerm_resource_group.azure-openai-rg.location
+  resource_group_name = azurerm_resource_group.azure-openai-rg.name
+  kind                = "FunctionApp"
+  sku {
+    tier = "Dynamic"
+    size = "Y1"
+  }
+}
+
+resource "azurerm_function_app" "create-documents-fa" {
+  name                       = "create-documents-fa"
+  location                   = azurerm_resource_group.azure-openai-rg.location
+  resource_group_name        = azurerm_resource_group.azure-openai-rg.name
+  app_service_plan_id        = azurerm_app_service_plan.plan.id
+  storage_account_name       = azurerm_storage_account.create-documents-fa-sa.name
+  storage_account_access_key = azurerm_storage_account.create-documents-fa-sa.primary_access_key
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_role_assignment" "create-documents-fa-document-sa-ra" {
+  principal_id   = azurerm_function_app.create-documents-fa.identity.0.principal_id
+  role_definition_name = "Storage Blob Data Contributor"
+  scope          = azurerm_storage_account.document-sa.id
+
+  depends_on = [ azurerm_function_app.create-documents-fa ]
+}
+
