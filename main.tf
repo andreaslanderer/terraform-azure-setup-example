@@ -2,6 +2,21 @@ provider "azurerm" {
   features {}
 }
 
+
+/*
+ * Variables
+ */
+variable "tenant_id" {
+  description = "Azure Tenant ID"
+  default     = "not-provided"
+}
+
+variable "object_id" {
+  description = "Azure Object ID"
+  default     = "not-provided"
+}
+
+
 /*
  * Resource group 
  */
@@ -45,6 +60,10 @@ resource "azurerm_subnet" "azure-openai-endpoint-subnet" {
    location = azurerm_resource_group.azure-openai-rg.location
    account_tier = "Standard"
    account_replication_type = "LRS"
+   
+   identity {
+    type = "SystemAssigned"
+  }
  }
 
  resource "azurerm_storage_container" "document-sa-container" {
@@ -66,3 +85,58 @@ resource "azurerm_subnet" "azure-openai-endpoint-subnet" {
      subresource_names = ["blob"]
    }
  }
+
+
+ /*
+  * Azure key infrastructure
+  */
+  resource "azurerm_key_vault" "azure-openai-keyvault" {
+    name = "azure-openai-keyvault-23"
+    location = azurerm_resource_group.azure-openai-rg.location
+    resource_group_name = azurerm_resource_group.azure-openai-rg.name
+    tenant_id = var.tenant_id
+    sku_name = "standard"
+
+    access_policy {
+        tenant_id = var.tenant_id
+        object_id = var.object_id
+
+        secret_permissions = [
+          "Get",
+          "Set"
+        ]
+
+        key_permissions = [
+            "Create",
+            "Get",
+            "Delete",
+            "List",
+            "WrapKey",
+            "UnwrapKey",
+            "Sign",
+            "Verify",
+            "Backup",
+            "Restore",
+            "Recover",
+            "Rotate",
+            "GetRotationPolicy",
+            "SetRotationPolicy"
+        ]
+    }
+}
+
+resource "azurerm_key_vault_key" "azure-openai-sa-key" {
+  name         = "storage-account-key"
+  key_vault_id = azurerm_key_vault.azure-openai-keyvault.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+}
