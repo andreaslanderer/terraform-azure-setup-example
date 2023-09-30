@@ -199,6 +199,11 @@ resource "azurerm_function_app" "create-documents-fa" {
     "FUNCTIONS_WORKER_RUNTIME" = "node"
     "WEBSITE_NODE_DEFAULT_VERSION" = "18.12.1", 
     "APPINSIGHTS_INSTRUMENTATIONKEY" = ""
+    "DOCUMENTS_SA"= azurerm_storage_account.document-sa.primary_connection_string
+  }
+
+  site_config {
+    vnet_route_all_enabled = true
   }
 }
 
