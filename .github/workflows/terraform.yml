@@ -1,0 +1,43 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main # or the branch you want to trigger the workflow on
+
+jobs:
+  terraform:
+    name: 'Terraform Apply'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.5.7
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Apply
+      env:
+        TF_VAR_tenant_id: ${{ secrets.TF_VAR_tenant_id }}
+        TF_VAR_object_id: ${{ secrets.TF_VAR_object_id }}
+      run: terraform apply -auto-approve
+
+    - name: Terraform Destroy
+      env:
+        TF_VAR_tenant_id: ${{ secrets.TF_VAR_tenant_id }}
+        TF_VAR_object_id: ${{ secrets.TF_VAR_object_id }}
+      run: terraform destroy
+
+    - name: Azure Logout
+      run: az logout
