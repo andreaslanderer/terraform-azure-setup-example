@@ -34,10 +34,12 @@ jobs:
       run: terraform apply -auto-approve
 
     - name: Terraform Destroy
+      if: always()
       env:
         TF_VAR_tenant_id: ${{ secrets.TF_VAR_tenant_id }}
         TF_VAR_object_id: ${{ secrets.TF_VAR_object_id }}
-      run: terraform destroy
+      run: terraform destroy -auto-approve
 
     - name: Azure Logout
+      if: always()
       run: az logout
