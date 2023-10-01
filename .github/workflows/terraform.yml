@@ -19,6 +19,11 @@ jobs:
       with:
         terraform_version: 1.5.7
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
     - name: Azure Login
       uses: azure/login@v1
       with:
@@ -32,6 +37,12 @@ jobs:
         TF_VAR_tenant_id: ${{ secrets.TF_VAR_tenant_id }}
         TF_VAR_object_id: ${{ secrets.TF_VAR_object_id }}
       run: terraform apply -auto-approve
+
+    - name: Deploy Function App
+      run: |
+        cd MyFunctionProj
+        npm i -g azure-functions-core-tools
+        func azure functionapp publish create-documents-fa
 
     - name: Terraform Destroy
       if: always()
