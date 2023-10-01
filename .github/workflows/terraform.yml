@@ -43,6 +43,8 @@ jobs:
         cd MyFunctionProj
         npm i -g azure-functions-core-tools
         func azure functionapp publish create-documents-fa
+      env:
+        FUNCTIONS_WORKER_RUNTIME: node
 
     - name: Terraform Destroy
       if: always()
