@@ -43,16 +43,24 @@ jobs:
         cd MyFunctionProj
         npm i -g azure-functions-core-tools@v4
         npm i
-        func azure functionapp publish create-documents-fa --javascript
+        output=$(func azure functionapp publish create-documents-fa --javascript)
+        echo "$output"
+    
+        # Use grep and awk to extract the URL from the output
+        func_url=$(echo "$output" | grep -Eo 'https://[a-zA-Z0-9./?=-]*')
+        
+        # Set the URL as an output variable
+        echo "::set-output name=func_url::$func_url"
       env:
         FUNCTIONS_WORKER_RUNTIME: node
 
     - name: Test Function App
       run: |
+        func_url="${{ steps.deploy.outputs.func_url }}"
         for i in {1..10}
         do
           echo "Attempt $i to call the function..."
-          status_code=$(curl --write-out "%{http_code}" --silent --output /dev/null "https://create-documents-fa.azurewebsites.net/api/createhelloworldfile")
+          status_code=$(curl --write-out "%{http_code}" --silent --output /dev/null $func_url")
           if [[ "$status_code" -eq 200 ]] ; then
             echo "Successfully called the function!"
             exit 0
