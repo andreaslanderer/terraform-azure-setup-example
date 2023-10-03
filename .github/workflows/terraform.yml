@@ -47,7 +47,10 @@ jobs:
         echo "$output"
     
         # Use grep and awk to extract the URL from the output
-        func_url=$(echo "$output" | grep -Eo 'https://[a-zA-Z0-9./?=-]*')
+        func_url=$(echo "$output" | grep -Eo 'https://[a-zA-Z0-9./?=-]+')
+    
+        # Check if the URL is captured
+        echo "Extracted URL: $func_url"
         
         # Set the URL as an output variable
         echo "::set-output name=func_url::$func_url"
