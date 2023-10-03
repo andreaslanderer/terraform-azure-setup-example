@@ -64,7 +64,7 @@ jobs:
         for i in {1..10}
         do
           echo "Attempt $i to call the function..."
-          status_code=$(curl --write-out "%{http_code}" --silent --output /dev/null $func_url")
+          status_code=$(curl --write-out "%{http_code}" --silent --output /dev/null "$func_url")
           if [[ "$status_code" -eq 200 ]] ; then
             echo "Successfully called the function!"
             exit 0
