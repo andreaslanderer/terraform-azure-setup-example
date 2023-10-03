@@ -39,6 +39,7 @@ jobs:
       run: terraform apply -auto-approve
 
     - name: Deploy Function App
+      id: deployFuncApp
       run: |
         cd MyFunctionProj
         npm i -g azure-functions-core-tools@v4
@@ -59,7 +60,7 @@ jobs:
 
     - name: Test Function App
       run: |
-        func_url="${{ steps.deploy.outputs.func_url }}"
+        func_url="${{ steps.deployFuncApp.outputs.func_url }}"
         for i in {1..10}
         do
           echo "Attempt $i to call the function..."
