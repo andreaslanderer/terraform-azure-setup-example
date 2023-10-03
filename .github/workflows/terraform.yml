@@ -41,7 +41,8 @@ jobs:
     - name: Deploy Function App
       run: |
         cd MyFunctionProj
-        npm i -g azure-functions-core-tools
+        npm i -g azure-functions-core-tools@v4
+        npm i
         func azure functionapp publish create-documents-fa --javascript
       env:
         FUNCTIONS_WORKER_RUNTIME: node
